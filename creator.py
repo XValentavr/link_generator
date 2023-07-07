@@ -25,7 +25,7 @@ while True:
             email_byte = base64.b64encode(email.encode('utf-8'))
 
             email_encrypted = email_byte.decode("utf-8")
-            name_encrypted = urllib.parse.quote(row[0])
+            name_encrypted = urllib.parse.quote(row[1])
             # create encryption
             SHA1_string = (secret_key + email + str(row[2]))
 
