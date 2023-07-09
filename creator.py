@@ -1,8 +1,18 @@
-import openpyxl
 import base64
-import urllib.parse
 import hashlib
-import uuid
+from urllib.parse import quote
+
+import openpyxl
+
+
+def generate_unique_link(domain, reference_number, email, name, secret_key):
+    base64_email = base64.b64encode(email.encode()).decode()
+    encoded_name = quote(name)
+    data_to_hash = f"{secret_key}{email}{reference_number}".encode()
+    hashed_data = hashlib.sha1(data_to_hash).hexdigest()
+
+    return f"https://se.trustpilot.com/evaluate/{domain}?a={reference_number}&b={base64_email}&c={encoded_name}&e={hashed_data}"
+
 
 while True:
     print('Enter path to file')
@@ -12,28 +22,14 @@ while True:
     workbook = openpyxl.load_workbook(path)
     sheet = workbook.active
 
-    new_column_letter = chr(ord('A') + sheet.max_column)
-
-    secret_key = str(uuid.uuid4())
-
+    new_column_letter = chr(ord('A') + 4)
     # need to write in correct column
     column_count = 0
     for i, row in enumerate(sheet.iter_rows(min_row=1, values_only=True), start=1):
         email = row[0]
         if email is not None:
-
-            email_byte = base64.b64encode(email.encode('utf-8'))
-
-            email_encrypted = email_byte.decode("utf-8")
-            name_encrypted = urllib.parse.quote(row[1])
-            # create encryption
-            SHA1_string = (secret_key + email + str(row[2]))
-
-            SHA1_encrypted = hashlib.sha1(str.encode(SHA1_string)).hexdigest()
-
-            unique_link = ("https://se.trustpilot.com/evaluate/prodiga.se?a=" + str(row[2]) + "&b="
-                           + email_encrypted + "&c=" + name_encrypted + "&e=" + SHA1_encrypted)
-
+            unique_link = generate_unique_link(domain="prodiga.se", reference_number=row[2], email=row[0], name=row[1],
+                                               secret_key=row[3])
             sheet[new_column_letter + str(column_count + 1)] = unique_link
             column_count += 1
         else:
